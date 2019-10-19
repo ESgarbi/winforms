@@ -1,86 +1,152 @@
-# Using the Classic WinForms Designer in WinForms Core
+# Windows Forms .NET Core Designer
 
-At this point, a dedicated WinForms Designer for WinForms Core is not yet available. As a workaround, you can use Visual Studio's option to work with linked files and use its WinForms Designer for the Classic Framework.
+The .NET Core Windows Forms visual designer will be part of a future Visual Studio 2019 update, but it is currently available as a pre-release Visual Studio extension. We have a preview version available with limited functionality in the [designer documentation](designer-releases/readme.md). 
 
-Here is, how it is done:
+📢 Please see the [designer documentation](designer-releases/readme.md) for the **download link to the Installer Package (VSIX)**, known issues and other release notes.
 
-**TIP:** During the process, you need to re-nest Form files in the Classic Framework WinForms project whenever you add a new Form or a new UserControl. Instead of using a text editor for patching the project file, you can use Mad Kristensen's [File Nesting Extension]( https://marketplace.visualstudio.com/items?itemName=MadsKristensen.FileNesting), which is recommended to be installed beforehand. Please close every open instance of Visual Studio before installing this extension.
 
-## Creating a WinForms Core App
 
-Visual Studio does not allow it currently to create a new WinForms Core App from within Visual Studio directly. If you want to design an WinForms Core app, you need to create the App first from the command line:
 
-Open your favorite console, and create a new folder with the application's name. The folder name will later become the project's name as well. Change to that folder.
+
+# Using the .NET Framework WinForms Designer with WinForms Core
+
+If you have complex design work to do and prefer to use the workaround to invoke the .NET Framework Winforms Designer, you can use Visual Studio's option to work with linked files and use its WinForms Designer for the .NET Framework. The instructions are below:
+
+:point_up: **TIP:** During the process, you need to re-nest Form files in the .NET Framework project whenever you add a new `Form` or a `UserControl`. Instead of using a text editor for patching the project file, you can use Mad Kristensen's [File Nesting Extension][file-nesting-extension], which is recommended to be installed beforehand.<br/>
+Please close every open instance of Visual Studio before installing this extension.
+
+### Create WinForms .NET Core app
+
+Create a new WinForms application targeting .NET Core from Visual Studio or your favorite command line interface.
+
+#### Create in Visual Studio
+
+`VS2019`:
+
+1. _File > Add > New Project... > Windows Forms App (.NET Core)_, choose C# or Visual Basic
+2. Specify project name, e.g. `SimpleWinForms`
+
+
+
+#### Create from command line
+
+Open your favorite console, create a new folder for your application:
+
+```cmd
+md SimpleWinForms
+cd SimpleWinForms
+dotnet new winforms -n SimpleWinForms
+dotnet new sln
+dotnet sln add SimpleWinForms
 ```
-md MyNewWinFormsProject
-cd MyNewWinFormsProject
+
+:point_up: **TIP:** You can have the folder name different from the project's name. Use the option `-n` (or `-name`) for that when using `dotnet new`.
+
+:point_up: **TIP:** For Visual Basic projects use the option `-lang vb` when using `dotnet new`.
+
+After creating the project, you can run the application:
+```cmd
+dotnet run --project SimpleWinForms\SimpleWinForms.csproj
 ```
 
-Now, create a new WinForms application with the `dotnet new` command, using the templates for WinForms. Run:
-```
-dotnet new winforms
-```
 
-**TIP:** You can have the folder name different from the project's name. Use the option `-n` (or `-name`) for that when using `dotnet new`.
+### Prepare WinForms .NET Core app for the Designer
 
-**NOTE:** Templates for **Visual Basic** are currently in development (so `dotnet new winforms -lang VB` will eventually work!), but they are not available yet. Visual Basic, however, is already supported; as a workaround for the time being, you can create an empty Core Console VB app, and rename and patch the project files accordingly (just copy those definitions over from a C# app). Also note that the Application Framework in Visual Basic is not supported in this version.
+There are few options available to help you to design UI for your .NET Core project.
 
-After creating it, you can test the App directly by starting it with
 
-```
-dotnet run
-```
+#### Option 1
 
-which builds and starts the App. 
+1. Open `SimpleWinForms.sln`
 
-**TIP:** If you only want to rebuild the App, use:
+2. Open the `SimpleWinForms` project file by double clicking on it in Solution Explorer. Change the ``TargetFramework`` property from:
 
-```
-dotnet build
-```
+    ```diff
+    -    <TargetFramework>netcoreapp5.0</TargetFramework>
+    +    <TargetFrameworks>net472;netcoreapp5.0</TargetFrameworks>
+    ```
 
-## Preparing the WinForms Core App for the Classic Designer
+3. Add for any and every form file you have in this ``ItemGroup``:
 
-1. Start Visual Studio and open this project.
-2. Save the project in Visual Studio, and with that, also save the Solution file.
-3. Open the context menu of the solution (not the project!) in the Solution Explorer and chose *Add New Project*.
+    ```xml
+     <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+       <Compile Update="Form1.cs">
+         <SubType>Form</SubType>
+       </Compile>
+       <Compile Update="Form1.Designer.cs">
+         <DependentUpon>Form1.cs</DependentUpon>
+       </Compile>
+     </ItemGroup>
+    ```
 
-![add-project-to-sln](./images/add-project-to-sln.png)
+    After doing these steps this is what you should end up with:
 
-4. In the *Installed Templates* section, pick *Visual C#* (this works for Visual Basic equally — see the comments for Visual Basic above, though), *Windows Desktop*, and then click *Windows Forms App (.NET Framework)* from the list of installed templates.
+    ![edit-project-file][edit-project-file]
 
-![add-project-dialog](./images/add-project-dialog.png)
 
-5. Name the new classic Framework project as the Core project, but add `.Designer` to it (For example, if your Core project is named `MyWinFormApp`, name the classic Framework App `MyWinFormsApp.Designer`).
-6. In the properties of the Classic Framework Application (context menu on the project in the Solution Explorer), rename the default namespace to the Core Application's default namespace.
+#### Option 2
 
-![edit-namespace](./images/edit-namespace.png)
+1. Open `SimpleWinForms.sln`
 
-7. Erase the existing Form files in both projects.
+2. Add a new **Windows Forms App (.NET Framework)** project (VS2017: _Visual C# > Windows Desktop_ / VS2019: _C# : Windows : Desktop_) to the solution (_File > Add > New Project..._)
 
-**Important:** The following steps you always repeat, when you need to insert a new Form or a new UserControl.
+    ![add-netfx-project][add-netfx-project]
 
-1. In the Classing Framework project, open the project's context menu, and click *Add New Item*.
+3. Name the new .NET Framework project as the .NET Core project, but add ".Designer" to it (e.g. `SimpleWinForms.Designer`)
 
-![add-new-form](./images/add-new-form.png)
+4. Go to the .NET Framework project properties and set the default namespace to the .NET Core project's namespace
 
-2. In the section list, click on *Windows Forms*, and chose *Windows Form* from the installed templates.
+    ![edit-namespace][edit-namespace]
 
-![add-new-form-dialog](./images/add-new-form-dialog.png)
+5. Delete the existing Form files in both projects
 
-3. Enter the name for the new Form/User Control.
-4. Click *Add*.
- **IMPORTANT**: Now, cause some change in the Designer on the form. For example, resize the form for a couple of pixels, or change the Text property of the form, so the resource file for it can be generated and saved. After that, save the form.
+6. Add a new Windows Form in the .NET Framework project's context menu _Add > Windows Form..._
 
-5. In the Solution Explorer, click on the form, and press (Ctrl)(x) to cut it the file.
-6. Select the Core WinForms project in the Solution Explorer, and press (Ctrl)(v) to insert the files. Check that the main form file, the .designer file and the resource file for the form are all present.
-7. Now, to have the exact same file back in the WinForms Classic Framework Designer, we need to use Visual Studio's file link option. Remember: We can only use the Classic Designer, but we want to have only one set of files. So, the form files, of course, belong to the Core App. But we want to edit them in the context of the Classic Framework App (thus using the Classic Designer). So, we link the existing Core Form files to the classic app, and to this end, you open the context menu on the classic project in the solution explorer, and pick *Add* and *Existing Item*.
-8. In the File Open Dialog, navigate to the Core app, and find the *Form.cs*, *Form.Designer.cs* and *Form.resx* files. (Replace *Form* by the name of your form.) Select all of them, but DO NOT click *Add* yet!
+    ![add-new-form][add-new-form]
 
-![add-as-link](./images/add-as-link.png)
+7. In the section list, click on *Windows Forms*, and chose *Windows Form* from the installed templates
 
-9. Open the pulldown menu of the *Add* dropdown button and click *Add as Link*.
-10. Compile the solution to see if the file references got set up correctly.
-11. As the last but important step, we need to re-nest the linked form files. If you installed the *File Nesting* Visual Studio Extension (see above), then that is done easily: Select both the *Form.Designer.cs* and *Form.resx* file, and from the context menu click *File Nesting* and *Nest Items*. In the dialog, pick the main form file (Form.cs), and click OK.
+    ![add-new-form-dialog][add-new-form-dialog]
 
-Now, whenever you need to use the Designer on one of the Core Form or UserControl files, simply open the linked files in the Classic Framework project with the Classic Windows Forms Designer.
+8. Give the name and click `[Add]`.
+
+   :exclamation: **IMPORTANT**: You need to trigger a form change event for the Designer to create a `resx` file. You can do it by resizing the form for a couple of pixels or changing the form's `Text` property. Don't forget to save.
+
+9. Now we move the form to the .NET Core project.<br />
+In the Solution Explorer click on the form and press <kbd>CTRL</kbd>+<kbd>X</kbd> to cut it; and then paste it in to the .NET Core project (<kbd>CTRL</kbd>+<kbd>V</kbd>). Check that the main form file, the .designer file and the resource file for the form are all present.
+
+10. Then we link the form back into the .NET Framework project back.<br />
+Remember: We can only use the Classic Designer, but we want to have only one set of files. So the form files, of course, belong to the .NET Core project but we want to edit them in the context of the .NET Framework project (thus using the .NET Framework Designer).
+
+    * To do this open the context menu on the .NET Framework project in the Solution Explorer, and pick _Add > Existing Item_
+
+    * In the File Open Dialog, navigate to the .NET Core project, select the *Form.cs*, *Form.Designer.cs* and *Form.resx* files and choose *Add as Link* option.
+
+    ![add-as-link][add-as-link]
+
+11. Compile the solution to see if the file references were set up correctly
+
+1. As the last but important step, we need to re-nest the linked form files.<br/>
+If you installed the [File Nesting Visual Studio Extension][file-nesting-extension] then that is done easily: Select both the *Form.Designer.cs* and *Form.resx* file, and from the context menu click _File Nesting > Nest Items_. In the dialog, pick the main form file (Form.cs), and click OK.
+
+Now, whenever you need to use the Designer on one of the .NET Core Form or UserControl files, simply open the linked files in the .NET Framework project with the Windows Forms Designer.
+
+
+### More information
+
+If you are porting an existing .NET Framework application to .NET Core you may wish to read the following blog posts:
+* [Porting desktop apps to .NET Core](https://devblogs.microsoft.com/dotnet/porting-desktop-apps-to-net-core/)
+* [Using the WinForms designer for .NET Core projects](https://devblogs.microsoft.com/dotnet/how-to-port-desktop-applications-to-net-core-3-0/#user-content-using-the-winforms-designer-for-net-core-projects)
+
+[comment]: <> (URI Links)
+
+[file-nesting-extension]: https://marketplace.visualstudio.com/items?itemName=MadsKristensen.FileNesting
+
+[comment]: <> (Images)
+
+[add-netfx-project]: images/add-netfx-project.png
+[edit-namespace]: images/edit-namespace.png
+[add-new-form]: images/add-new-form.png
+[add-new-form-dialog]: images/add-new-form-dialog.png
+[add-as-link]: images/add-as-link.png
+[edit-project-file]: images/edit-project-file.png
